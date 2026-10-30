@@ -76,6 +76,7 @@
 [data-theme] .stat.done b{color:var(--success-text)}
 [data-theme="light"] .stat.done b{color:#416248}
 [data-theme] .card-status .status[data-status="已約定"]{background:var(--info-bg);color:var(--info-text)}
+[data-theme] .card-status .status{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;padding:6px 13px;line-height:1.6;font-weight:500;box-shadow:none}
 [data-theme] .record-number{color:var(--cancel-text)}
 [data-theme="light"] .record-number{color:#6e6356}
 .record-toolbar{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:22px}.record-toolbar .workspace-heading{margin-bottom:0}.record-toolbar .actions{flex-shrink:0}

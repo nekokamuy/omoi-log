@@ -1,6 +1,17 @@
 export const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const cleanAccount=value=>String(value??'').trim().replace(/^[@＠\s]+/u,'');
 export const displayAccount=value=>cleanAccount(value)?'@'+cleanAccount(value):'';
+export function composeTime(hour,minute){if(hour===''&&minute==='')return '';if(!/^\d{2}$/.test(hour)||!/^\d{2}$/.test(minute)||Number(hour)>23||Number(minute)>59)return null;return `${hour}:${minute}`}
+export function timePickerMarkup(value=''){
+const match=/^(\d{2}):(\d{2})(?::\d{2})?$/.exec(value||''),valid=match&&composeTime(match[1],match[2])!==null,hour=valid?match[1]:'',minute=valid?match[2]:'';
+const options=(count,selected,suffix)=>Array.from({length:count},(_,i)=>{const v=String(i).padStart(2,'0');return `<option value="${v}" ${v===selected?'selected':''}>${v} ${suffix}</option>`}).join('');
+return `<div class="time-field"><span id="appointment-time-label">約定時間</span><div class="time-picker" role="group" aria-labelledby="appointment-time-label"><select data-time-hour aria-label="約定時間：小時"><option value="">未設定</option>${options(24,hour,'時')}</select><span aria-hidden="true">:</span><select data-time-minute aria-label="約定時間：分鐘"><option value="">-- 分</option>${options(60,minute,'分')}</select></div><input type="hidden" name="time" value="${hour?`${hour}:${minute}`:''}"></div>`;
+}
+export function bindTimePicker(form){
+const hour=form.querySelector('[data-time-hour]'),minute=form.querySelector('[data-time-minute]'),value=form.querySelector('[name="time"]');
+const sync=event=>{if(event.target===hour){if(!hour.value)minute.value='';else if(!minute.value)minute.value='00'}const time=composeTime(hour.value,minute.value);hour.setCustomValidity(time===null?'請選擇小時與分鐘，或將小時改回未設定。':'');value.value=time??''};
+hour.addEventListener('change',sync);minute.addEventListener('change',sync);
+}
 export function splitTags(value){return [...new Set(String(value??'').split(/[\s,，]+/u).map(tag=>tag.replace(/^[#＃]+/u,'')).filter(Boolean))]}
 export function availableTags(records,currentTags=''){return [...new Set([...records.flatMap(record=>splitTags(record.tags)),...splitTags(currentTags)])].sort((a,b)=>a.localeCompare(b,'zh-Hant'))}
 export function mergeTags(selected,custom){return [...new Set([...selected.flatMap(splitTags),...splitTags(custom)])].join(' ')}
