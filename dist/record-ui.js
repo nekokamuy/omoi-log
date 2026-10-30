@@ -1,6 +1,14 @@
 export const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const cleanAccount=value=>String(value??'').trim().replace(/^[@＠\s]+/u,'');
 export const displayAccount=value=>cleanAccount(value)?'@'+cleanAccount(value):'';
+export function splitTags(value){return [...new Set(String(value??'').split(/[\s,，]+/u).map(tag=>tag.replace(/^[#＃]+/u,'')).filter(Boolean))]}
+export function availableTags(records,currentTags=''){return [...new Set([...records.flatMap(record=>splitTags(record.tags)),...splitTags(currentTags)])].sort((a,b)=>a.localeCompare(b,'zh-Hant'))}
+export function mergeTags(selected,custom){return [...new Set([...selected.flatMap(splitTags),...splitTags(custom)])].join(' ')}
+export function tagPickerMarkup(records,currentTags=''){
+const tags=availableTags(records,currentTags),selected=new Set(splitTags(currentTags));
+const custom='<label>自訂 hashtag<input name="customTags" maxlength="1000" placeholder="例如：小卡 現場領取（空格分隔）"><span class="help">新增標籤會與勾選的標籤一起儲存，下次即可直接選取。</span></label>';
+return `<fieldset class="wide tag-picker"><legend>選擇 hashtag（可複選）</legend>${tags.length?`<p class="help">以下為所有場次現有的標籤，可勾選或取消。</p><div class="tag-options">${tags.map(tag=>`<label class="tag-choice"><input type="checkbox" name="selectedTags" value="${escapeHTML(tag)}" ${selected.has(tag)?'checked':''}><span>#${escapeHTML(tag)}</span></label>`).join('')}</div><details class="custom-tags"><summary>找不到需要的標籤？自訂新增</summary>${custom}</details>`:`<p class="help">目前沒有可選的標籤，先自訂新增。</p>${custom}`}</fieldset>`;
+}
 export function recordNumber(record,records){return String(records.filter(r=>r.eventId===record.eventId).findIndex(r=>r.id===record.id)+1).padStart(2,'0')}
 export function notesMarkup(notes){const text=String(notes??'').trim();if(!text)return '';const chars=Array.from(text);if(chars.length<=80)return `<div class="record-notes"><span class="section-caption">備註</span><p>${escapeHTML(text)}</p></div>`;return `<details class="record-notes notes-expand"><summary><span class="section-caption">備註</span><span class="notes-preview">${escapeHTML(chars.slice(0,80).join(''))}...</span><span class="when-closed disclosure-label">展開備註 ﹀</span><span class="when-open disclosure-label">收起備註 ﹀</span></summary><p>${escapeHTML(text)}</p></details>`}
 export function imagesMarkup(images,{expanded=false}={}){if(!images?.length)return '';return `<details class="image-accordion" ${expanded?'open':''}><summary><span>${images.length}張圖片，</span><span class="when-closed">點選展開 ﹀</span><span class="when-open">點選收起 ︿</span></summary><div class="inline-gallery">${images.map((src,i)=>`<figure><img src="${escapeHTML(src)}" alt="圖片 ${i+1}" loading="lazy"><figcaption>${i+1} / ${images.length}</figcaption></figure>`).join('')}</div></details>`}
