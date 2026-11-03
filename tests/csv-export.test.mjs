@@ -1,0 +1,5 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {exportRecordsCSV,parseCSV} from '../dist/core.js';
+test('CSV 保留中文、場次、狀態、逗號、換行與引號，不輸出圖片',()=>{const csv=exportRecordsCSV([{eventId:'e',name:'小葵',notes:'第一行,\n她說"你好"',status:'已完成',statusBeforeCompletion:'已約定',images:['secret-image']}],[{id:'e',name:'台北',date:'2026-11-03'}]);assert.ok(csv.startsWith('\uFEFF'));assert.ok(!csv.includes('secret-image'));const [head,row]=parseCSV(csv);assert.equal(row[head.indexOf('演唱會場次')],'台北');assert.equal(row[head.indexOf('備註')],'第一行,\n她說"你好"');assert.equal(row[head.indexOf('狀態')],'已完成');assert.equal(row[head.indexOf('完成前狀態')],'已約定')});
+test('CSV 文字不執行為試算表公式；空資料仍輸出標題',()=>{const [head,row]=parseCSV(exportRecordsCSV([{name:'=1+1',account:'@example',notes:'  =SUM(A1)'}],[]));assert.equal(row[head.indexOf('對方暱稱')],"'=1+1");assert.equal(row[head.indexOf('社群帳號')],"'@example");assert.equal(row[head.indexOf('備註')],"'  =SUM(A1)");assert.equal(parseCSV(exportRecordsCSV([],[])).length,1)});
