@@ -67,7 +67,7 @@ export class ImageStore{
     await new Promise((resolve,reject)=>{const r=tx.objectStore('images').index('size').openKeyCursor();r.onsuccess=()=>{const c=r.result;if(!c)return resolve();bytes+=c.key;count++;c.continue()};r.onerror=()=>reject(r.error)});await done;return {bytes,count};
   }
   async exportBackup(){
-    const snapshot=this.data;const parts=[new Blob(['{"version":1,"events":',JSON.stringify(snapshot.events),',"records":['])];
+    const snapshot=this.data,metadata={version:1,events:snapshot.events};if(snapshot.importSources)metadata.importSources=snapshot.importSources;if(snapshot.importBatches)metadata.importBatches=snapshot.importBatches;const parts=[new Blob([JSON.stringify(metadata).slice(0,-1),',"records":['])];
     for(let i=0;i<snapshot.records.length;i++){
       const {images,...record}=snapshot.records[i];parts.push(new Blob([(i?',':'')+JSON.stringify(record).slice(0,-1)+',"images":[']));
       for(let j=0;j<images.length;j++)parts.push(new Blob([(j?',':'')+JSON.stringify(await blobToDataURL(await this.image(images[j])))]));

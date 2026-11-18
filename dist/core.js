@@ -1,3 +1,4 @@
+import {validDriveImages,mergeDriveImages} from './drive.js';
 export const types=['互相交換','對方來領取','我要去領取'];
 export const platforms=['Threads','Instagram','X / Twitter','Facebook','LINE','其他'];
 export const statuses=['待確認','已約定','已完成','已取消'];
@@ -18,17 +19,22 @@ if(status==='已完成'&&record.status!=='已完成')next.statusBeforeCompletion
 else if(status!=='已完成')delete next.statusBeforeCompletion;
 next.status=status;return next;
 }
-export const fields={name:'對方暱稱',account:'社群帳號',platform:'社群平台',type:'交換類型',give:'我要給的物品',receive:'我要領的物品',quantity:'數量',time:'約定時間',place:'約定地點',tags:'標籤',notes:'備註',link:'個人頁連結'};
+export const fields={name:'對方暱稱',account:'社群帳號',platform:'社群平台',type:'交換類型',give:'實際交付的無料',receive:'對方提供的無料',quantity:'數量',time:'約定時間',place:'約定地點',tags:'標籤',notes:'手動備註',link:'個人頁連結',email:'email',requestedGiveaway:'希望領取的無料',formMessage:'表單留言',submittedAt:'表單提交時間',registrationId:'固定登記編號'};
 export function exportRecordsCSV(records,events){
-const columns=['eventName','eventDate','eventVenue',...Object.keys(fields),'status','statusBeforeCompletion'];
-const titles={...fields,eventName:'演唱會場次',eventDate:'場次日期',eventVenue:'演出地點',status:'狀態',statusBeforeCompletion:'完成前狀態'};
+const columns=['eventName','eventDate','eventVenue',...Object.keys(fields),'driveLinks','status','statusBeforeCompletion'];
+const titles={...fields,notes:'備註',eventName:'演唱會場次',eventDate:'場次日期',eventVenue:'演出地點',status:'狀態',statusBeforeCompletion:'完成前狀態',driveLinks:'Drive 圖片連結'};
 const quote=value=>'"'+String(value??'').replace(/"/g,'""')+'"';
 const safe=value=>/^\s*[=+\-@]/.test(String(value??''))?"'"+value:value;
-const rows=records.map(record=>{const event=events.find(e=>e.id===record.eventId);const item={...record,eventName:event?.name||'',eventDate:event?.date||'',eventVenue:event?.venue||''};return columns.map(key=>safe(item[key]))});
+const rows=records.map(record=>{const event=events.find(e=>e.id===record.eventId);const item={...record,driveLinks:mergeDriveImages(record.driveImages).map(image=>image.url).join(', '),eventName:event?.name||'',eventDate:event?.date||'',eventVenue:event?.venue||''};return columns.map(key=>safe(item[key]))});
 return '\uFEFF'+[columns.map(key=>titles[key]),...rows].map(row=>row.map(quote).join(',')).join('\r\n');
 }
 export function normalize(v){return String(v??'').normalize('NFKC').toLowerCase().replace(/[@#＃＠]/g,'').trim()}
 export function matches(r,q){const text=normalize(Object.entries(r).filter(([key,value])=>key!=='statusBeforeCompletion'&&(typeof value==='string'||typeof value==='number')).map(([,value])=>value).join(' '));return normalize(q).split(/\s+/).every(t=>text.includes(t))}
 export function parseCSV(text){text=text.replace(/^\uFEFF/,'');let rows=[],row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){let c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else if(!quoted&&cell!=='')throw Error('引號格式不正確');else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell=''}else cell+=c}if(quoted)throw Error('CSV 引號未閉合');row.push(cell);if(row.some(v=>v.trim()))rows.push(row);return rows}
 export function duplicate(a,b){return normalize(a.account||a.name)===normalize(b.account||b.name)&&normalize(a.platform)===normalize(b.platform)&&a.type===b.type}
-export function validBackup(d){const strings=(o,keys)=>o&&keys.every(k=>o[k]===undefined||typeof o[k]==='string');return d?.version===1&&Array.isArray(d.events)&&Array.isArray(d.records)&&d.events.every(e=>strings(e,['date','venue'])&&typeof e.id==='string'&&typeof e.name==='string')&&new Set(d.events.map(e=>e.id)).size===d.events.length&&new Set(d.records.map(r=>r?.id)).size===d.records.length&&d.records.every(r=>strings(r,[...Object.keys(fields).filter(k=>k!=='quantity'),'updatedAt','statusBeforeCompletion'])&&typeof r.id==='string'&&typeof r.name==='string'&&d.events.some(e=>e.id===r.eventId)&&types.includes(r.type)&&statuses.includes(r.status)&&Array.isArray(r.images)&&r.images.every(im=>typeof im==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(im)))}
+function validImportMetadata(data){
+const sources=data.importSources;if(sources!==undefined&&(!Array.isArray(sources)||new Set(sources.map(s=>s?.id)).size!==sources.length||!sources.every(s=>s&&typeof s.id==='string'&&typeof s.name==='string'&&data.events.some(e=>e.id===s.eventId)&&s.mapping&&typeof s.mapping==='object'&&!Array.isArray(s.mapping)&&Object.values(s.mapping).every(v=>v===null||typeof v==='string'))))return false;
+if(data.importBatches!==undefined&&(!Array.isArray(data.importBatches)||!data.importBatches.every(batch=>batch&&typeof batch.id==='string'&&typeof batch.sourceId==='string')))return false;
+return data.records.every(record=>record.imports===undefined||Array.isArray(record.imports)&&record.imports.every(entry=>entry&&typeof entry.sourceId==='string'&&typeof entry.key==='string'&&sources?.some(source=>source.id===entry.sourceId&&source.eventId===record.eventId)&&entry.snapshot&&typeof entry.snapshot==='object'&&!Array.isArray(entry.snapshot)&&validDriveImages(entry.snapshot.driveImages)));
+}
+export function validBackup(d){const strings=(o,keys)=>o&&keys.every(k=>o[k]===undefined||typeof o[k]==='string');return d?.version===1&&Array.isArray(d.events)&&Array.isArray(d.records)&&d.events.every(e=>strings(e,['date','venue'])&&typeof e.id==='string'&&typeof e.name==='string')&&new Set(d.events.map(e=>e.id)).size===d.events.length&&new Set(d.records.map(r=>r?.id)).size===d.records.length&&d.records.every(r=>strings(r,[...Object.keys(fields).filter(k=>k!=='quantity'),'updatedAt','statusBeforeCompletion'])&&typeof r.id==='string'&&typeof r.name==='string'&&d.events.some(e=>e.id===r.eventId)&&types.includes(r.type)&&statuses.includes(r.status)&&validDriveImages(r.driveImages)&&Array.isArray(r.images)&&r.images.every(im=>typeof im==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(im)))&&validImportMetadata(d)}

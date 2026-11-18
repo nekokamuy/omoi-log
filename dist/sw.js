@@ -1,4 +1,4 @@
-const CACHE='omoi-v24';
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./style.css','./hierarchy.css','./theme.css','./palette.css','./forms.css','./images.css','./theme.js','./app.js','./core.js','./storage.js','./image-processing.js','./gallery.js','./record-ui.js','./icon.svg','./icon-light.svg','./manifest.webmanifest'])));self.skipWaiting()});
+const CACHE='omoi-v25';
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./style.css','./hierarchy.css','./theme.css','./palette.css','./forms.css','./images.css','./imports.css','./theme.js','./app.js','./core.js','./storage.js','./image-processing.js','./gallery.js','./drive.js','./import-engine.js','./import-ui.js','./record-ui.js','./icon.svg','./icon-light.svg','./manifest.webmanifest'])));self.skipWaiting()});
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin)return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)))});
