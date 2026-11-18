@@ -1,4 +1,5 @@
 export const types=['互相交換','對方來領取','我要去領取'];
+export const platforms=['Threads','Instagram','X / Twitter','Facebook','LINE','其他'];
 export const statuses=['待確認','已約定','已完成','已取消'];
 export function concertCountdown(date,now=new Date()){
 if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(now.getTime()))return null;

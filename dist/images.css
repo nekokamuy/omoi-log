@@ -1,0 +1,15 @@
+.gallery-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;max-width:100%;min-width:0;scrollbar-width:thin;border-radius:8px;background:var(--gallery)}
+.gallery-slide{flex:0 0 100%;width:100%;min-width:0;margin:0;scroll-snap-align:start;scroll-snap-stop:always;display:grid;place-items:center;position:relative;min-height:220px;height:clamp(240px,50dvh,540px);padding:8px}
+.gallery-slide img,dialog .gallery-slide img{display:block;width:100%;height:100%;min-height:0;max-height:100%;object-fit:contain;border-radius:4px}
+.gallery-slide img:not([src]){visibility:hidden}
+.gallery-error{position:absolute;inset:25%;text-align:center;line-height:1.8;font-size:13px;color:var(--muted)}
+.gallery-error[hidden]{display:none}
+.gallery-controls{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:12px 0 4px}
+.gallery-controls button{font-size:12px;min-width:0;min-height:44px;padding:9px}
+.gallery-controls span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.gallery-track:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.image-edit-list{display:flex;flex-wrap:wrap;gap:8px;width:100%}.image-edit-item{display:flex;align-items:center;gap:10px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;font-size:12px;color:var(--muted)}.image-edit-item button{padding:3px 7px;min-height:32px}
+.storage-summary{background:var(--surface-soft);border:1px solid var(--line);border-radius:9px;padding:14px;line-height:1.9;font-size:13px;margin-bottom:18px;overflow-wrap:anywhere}
+.storage-summary p{margin:4px 0}.storage-summary .storage-warning{color:var(--warm-text);background:var(--warm-bg);padding:8px;border-radius:5px}
+.optimize-progress{display:block;width:100%;height:15px;accent-color:var(--accent);margin:18px 0}.optimization-summary{line-height:2;font-size:14px}.optimization-mode{display:grid;gap:8px;font-size:13px;margin-top:15px}
+@media(max-width:700px){.gallery-slide{height:42dvh;min-height:220px}.gallery-controls{gap:8px}.gallery-controls button{font-size:12px;padding:9px 5px}}
